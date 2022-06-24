@@ -5,30 +5,40 @@ const socket = io("http://localhost:5031");
 const messages = ref([]);
 const messageText = ref("");
 const user = ref("");
+const room = ref("");
 const joined = ref(false);
 
-onBeforeMount(() => {
-  socket.emit("findAllSocketio", {}, (response) => {
-    messages.value = response;
-  });
-
-  socket.on("message", (message) => {
-    console.log("socket.on message : ", message);
-    messages.value.push(message);
-  });
-});
+onBeforeMount(() => {});
 
 const join = () => {
-  socket.emit("join", { user: user.value }, () => {
-    joined.value = true;
-  });
+  if (!user.value || !room.value) {
+    alert("You need to Enter both user and room");
+  } else {
+    socket.emit("join", { user: user.value, room: room.value }, () => {
+      joined.value = true;
+    });
+
+    socket.emit("findAllSocketio", { room: room.value }, (response) => {
+      messages.value = response;
+    });
+
+    socket.on(room.value, (message) => {
+      console.log("socket.on message : ", message);
+      messages.value.push(message);
+    });
+  }
 };
 
 const sendMessage = () => {
-  socket.emit("createSocketio", { text: messageText.value }, () => {
-    // message.value.push(response);
-    messageText.value = "";
-  });
+  console.log("sendMessage : ", room);
+  socket.emit(
+    "createSocketio",
+    { text: messageText.value, room: room.value },
+    () => {
+      // message.value.push(response);
+      messageText.value = "";
+    }
+  );
 };
 </script>
 
@@ -37,14 +47,19 @@ const sendMessage = () => {
     <div v-if="!joined">
       <form @submit.prevent="join">
         <label>What's your name?</label>
+        <br />
         <input v-model="user" />
+        <br />
+        <label>Which room do you want to join?</label>
+        <br />
+        <input v-model="room" />
         <button type="submit">Send</button>
       </form>
     </div>
     <div class="chat-container">
       <div class="messages-container">
         <div v-for="messages in messages">
-          [{{ messages.name }}]: {{ messages.text }}
+          [{{ messages.name }}]: {{ messages.time }} -> {{ messages.text }}
         </div>
       </div>
       <hr />
