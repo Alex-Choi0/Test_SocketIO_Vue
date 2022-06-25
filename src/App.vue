@@ -1,7 +1,7 @@
 <script setup>
 import { io } from "socket.io-client";
 import { onBeforeMount, ref } from "vue";
-const socket = io("http://localhost:5031");
+const socket = io("http://127.0.0.1:5031");
 const messages = ref([]);
 const messageText = ref("");
 const user = ref("");
